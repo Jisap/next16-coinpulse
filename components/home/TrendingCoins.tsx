@@ -1,5 +1,5 @@
 import { fetcher } from '@/lib/coingecko.action';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency, formatPercentage } from '@/lib/utils';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -47,12 +47,14 @@ const TrendingCoins = async () => {
               'price-change', isTrendingUp ? 'text-green-500' : 'text-red-500'
             )}
           >
-            {isTrendingUp ? (
-              <TrendingUp width={16} height={16} />
-            ) : (
-              <TrendingDown width={16} height={16} />
-            )}
-            {Math.abs(item.data.price_change_percentage_24h.usd).toFixed(2)}%
+            <p className="flex items-center">
+              {formatPercentage(item.data.price_change_percentage_24h.usd)}
+              {isTrendingUp ? (
+                <TrendingUp width={16} height={16} />
+              ) : (
+                <TrendingDown width={16} height={16} />
+              )}
+            </p>
           </div>
         )
       }
@@ -60,7 +62,7 @@ const TrendingCoins = async () => {
     {
       header: 'Price',
       cellClassName: 'price-cell',
-      cell: (coin) => coin.item.data.price
+      cell: (coin) => formatCurrency(coin.item.data.price)
     }
   ]
 
