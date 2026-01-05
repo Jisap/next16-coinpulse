@@ -6,6 +6,11 @@ import qs from "query-string"
 const BASE_URL = process.env.COINGECKO_BASE_URL;
 const API_KEY = process.env.COINGECKO_API_KEY;
 
+// Debugging temporal - ELIMINAR después de verificar
+console.log('BASE_URL:', BASE_URL);
+console.log('API_KEY exists:', !!API_KEY);
+console.log('API_KEY length:', API_KEY?.length);
+
 if (!BASE_URL) throw new Error('Could not get base url');
 if (!API_KEY) throw new Error('Could not get api key');
 
@@ -23,8 +28,8 @@ export async function fetcher<T>(
   params?: QueryParams,
   revalidate = 60,
 ): Promise<T> {
-  // Construye la URL completa incluyendo los parámetros de consulta.
-  const url = qs.stringifyUrl(
+
+  const url = qs.stringifyUrl(                    // Construye la URL completa incluyendo los parámetros de consulta.
     {
       url: `${BASE_URL}/${endpoint}`,
       query: params,
@@ -32,24 +37,26 @@ export async function fetcher<T>(
     { skipEmptyString: true, skipNull: true },
   );
 
-  // Realiza la petición fetch a la API.
-  const response = await fetch(url, {
+
+  const response = await fetch(url, {             // Realiza la petición fetch a la API.
     headers: {
-      'x-cg-pro-api-key': API_KEY,
+      'x-cg-demo-api-key': API_KEY,
       'Content-Type': 'application/json',
     } as Record<string, string>,
-    next: { revalidate },
+    next: { revalidate },                         // Usa la opción next: { revalidate } para controlar el comportamiento del caché de datos de Next.js.
   });
 
-  // Si la respuesta no es exitosa, maneja el error.
-  if (!response.ok) {
-    // Intenta obtener el cuerpo del error de la respuesta.
-    const errorBody: CoinGeckoErrorBody = await response.json().catch(() => ({}));
 
-    // Lanza un error con detalles sobre el fallo.
-    throw new Error(`API Error: ${response.status}: ${errorBody.error || response.statusText} `);
+  if (!response.ok) {                             // Si la respuesta no es exitosa, maneja el error.
+
+    const errorBody: CoinGeckoErrorBody = await response.json().catch(() => ({})); // Intenta obtener el cuerpo del error de la respuesta.
+
+
+    throw new Error(                               // Lanza un error con detalles sobre el fallo.
+      `API Error: ${response.status}: ${errorBody.error || response.statusText} `
+    );
   }
 
-  // Si la respuesta es exitosa, la convierte a JSON y la devuelve.
-  return response.json();
+
+  return response.json();                           // Si la respuesta es exitosa, la convierte a JSON y la devuelve.
 }
