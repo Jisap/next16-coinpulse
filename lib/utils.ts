@@ -27,4 +27,22 @@ export function formatCurrency(
     minimumFractionDigits: digits ?? 2,
     maximumFractionDigits: digits ?? 2,
   });
+};
+
+export function formatPercentage(change: number | null | undefined): string {
+  if (change === null || change === undefined || isNaN(change)) {
+    return '0.0%';
+  }
+  const formattedChange = change.toFixed(1);
+  return `${formattedChange}%`;
+}
+
+export function trendingClasses(value: number) {
+  const isTrendingUp = value > 0;
+
+  return {
+    textClass: isTrendingUp ? 'text-green-400' : 'text-red-400',
+    bgClass: isTrendingUp ? 'bg-green-500/10' : 'bg-red-500/10',
+    iconClass: isTrendingUp ? 'icon-up' : 'icon-down',
+  };
 }
