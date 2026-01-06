@@ -51,9 +51,12 @@ export async function fetcher<T>(
 
     const errorBody: CoinGeckoErrorBody = await response.json().catch(() => ({})); // Intenta obtener el cuerpo del error de la respuesta.
 
+    const errorMessage = typeof errorBody.error === 'object'
+      ? JSON.stringify(errorBody.error)
+      : errorBody.error || response.statusText;
 
     throw new Error(                               // Lanza un error con detalles sobre el fallo.
-      `API Error: ${response.status}: ${errorBody.error || response.statusText} `
+      `API Error: ${response.status}: ${errorMessage} `
     );
   }
 

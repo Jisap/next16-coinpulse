@@ -91,19 +91,42 @@ export const getChartConfig = (
   },
 });
 
-export const PERIOD_CONFIG: Record<Period, // daily, weekly, monthly, 3months, 6months, yearly, max
+// Original Code
+// export const PERIOD_CONFIG: Record<Period, // daily, weekly, monthly, 3months, 6months, yearly, max
+//   {
+//     days: number | string;                 // number for days, string for max
+//     interval?: 'hourly' | 'daily'          // hourly or daily
+//   }
+// > = {
+//   daily: { days: 1, interval: 'hourly' },
+//   weekly: { days: 7, interval: 'hourly' },
+//   monthly: { days: 30, interval: 'hourly' },
+//   '3months': { days: 90, interval: 'daily' },
+//   '6months': { days: 180, interval: 'daily' },
+//   yearly: { days: 365 },
+//   max: { days: 'max' },
+// };
+
+// Configuración para CoinGecko Demo API
+// IMPORTANTE: La API demo NO acepta el parámetro 'interval'
+// La granularidad de los datos la determina automáticamente según los 'days':
+// - 1 día: datos cada ~30 minutos
+// - 2-90 días: datos cada ~4 horas
+// - 91+ días: datos cada 1-4 días
+export const PERIOD_CONFIG: Record<
+  Period,
   {
-    days: number | string;                 // number for days, string for max
-    interval?: 'hourly' | 'daily'          // hourly or daily
+    days: number | string;
+    interval?: 'hourly' | 'daily'; // Mantenido para compatibilidad de tipos, pero NO se usa
   }
 > = {
-  daily: { days: 1, interval: 'hourly' },
-  weekly: { days: 7, interval: 'hourly' },
-  monthly: { days: 30, interval: 'hourly' },
-  '3months': { days: 90, interval: 'daily' },
-  '6months': { days: 180, interval: 'daily' },
-  yearly: { days: 365 },
-  max: { days: 'max' },
+  daily: { days: 1 },       // ~30 min de granularidad
+  weekly: { days: 7 },      // ~4 horas de granularidad
+  monthly: { days: 30 },    // ~4 horas de granularidad
+  '3months': { days: 90 },  // ~4 horas de granularidad
+  '6months': { days: 180 }, // ~1 día de granularidad
+  yearly: { days: 365 },    // ~4 días de granularidad
+  max: { days: 365 },     // Limitado a 365 días en API Demo
 };
 
 export const PERIOD_BUTTONS: { value: Period; label: string }[] = [

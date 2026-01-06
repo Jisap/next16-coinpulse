@@ -1,7 +1,7 @@
 "use client"
 
 
-import { getCandlestickConfig, getChartConfig, PERIOD_BUTTONS, PERIOD_CONFIG } from '@/constants';
+import { getCandlestickConfig, getChartConfig, LIVE_INTERVAL_BUTTONS, PERIOD_BUTTONS, PERIOD_CONFIG } from '@/constants';
 import { fetcher } from '@/lib/coingecko.action';
 import { convertOHLCData } from '@/lib/utils';
 import { CandlestickSeries, createChart, IChartApi, ISeriesApi } from 'lightweight-charts';
@@ -13,6 +13,10 @@ const CandlestickChart = ({
   coinId,
   height = 360,
   initialPeriod = 'daily',
+  liveOhlcv = null,
+  mode = 'historical',
+  liveInterval,
+  setLiveInterval,
 }: CandlestickChartProps) => {
 
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
@@ -27,12 +31,22 @@ const CandlestickChart = ({
   const fetchOHLCData = async (selectedPeriod: Period) => {
     try {
       const { days, interval } = PERIOD_CONFIG[selectedPeriod]; // daily: { days: 1, interval: 'hourly' }, weekly: { days: 7, interval: 'hourly' }, etc
-      const newData = await fetcher<OHLCData[]>(`/coins/${coinId}/ohlc`, {
+
+      // Construir parámetros base
+      const params: Record<string, string | number> = {
         vs_currency: 'usd',
         days,
-        interval,
-        precision: 'full',
-      });
+      };
+
+      // Solo incluir interval si está definido en PERIOD_CONFIG
+      if (interval) {
+        params.interval = interval;
+      }
+
+      console.log('Fetching OHLC data:', { period: selectedPeriod, params });
+      const newData = await fetcher<OHLCData[]>(`/coins/${coinId}/ohlc`, params);
+      console.log('Received data points:', newData?.length);
+      setOhlcData(newData ?? []);
       console.log('newData', newData)
       setOhlcData(newData ?? [])
     } catch (error) {
@@ -87,7 +101,54 @@ const CandlestickChart = ({
       candleSeriesRef.current = null;
     };
 
-  }, [height])
+  }, [height]);
+
+  // NUEVO useEffect: Actualizar la configuración del timeScale cuando cambia period
+  useEffect(() => {
+    if (!chartRef.current) return;
+
+    const showTime = ['daily', 'weekly', 'monthly'].includes(period);
+    chartRef.current.applyOptions({
+      ...getChartConfig(height, showTime),
+    });
+  }, [period, height]);
+
+  // Este useEffect es el responsable de actualizar el gráfico cuando los datos cambian
+  useEffect(() => {
+    if (!candleSeriesRef.current) return;                                                       // Verifica que la serie de velas ya exista. Si el gráfico no se ha creado todavía (por el primer useEffect), no hace nada para evitar errores.
+
+    const convertedToSeconds = ohlcData.map(                                                    // Toma los datos históricos (ohlcData) y divide los timestamps por 1000. Se adaptan asi los datos a la libreria lightweight-charts que espera datos en segundos.
+      (item) => [Math.floor(item[0] / 1000), item[1], item[2], item[3], item[4]] as OHLCData,
+    );
+
+    let merged: OHLCData[];
+
+    if (liveOhlcv) {                                                                            // Si hay datos en vivo disponibles
+      const liveTimestamp = liveOhlcv[0];                                                       // Obtiene el timestamp de la vela en vivo
+
+      const lastHistoricalCandle = convertedToSeconds[convertedToSeconds.length - 1];           // Obtiene la última vela del historial
+
+      if (lastHistoricalCandle && lastHistoricalCandle[0] === liveTimestamp) {                  // Si la última vela histórica coincide en tiempo con la vela en vivo
+        merged = [...convertedToSeconds.slice(0, -1), liveOhlcv];                               // Reemplaza la última vela histórica con la vela en vivo actualizada
+      } else {                                                                                  // Si no coinciden (es una nueva vela)
+        merged = [...convertedToSeconds, liveOhlcv];                                            // Añade la vela en vivo al final del array
+      }
+    } else {
+      merged = convertedToSeconds;
+    }
+
+    merged.sort((a, b) => a[0] - b[0]);
+
+    const converted = convertOHLCData(merged);
+    candleSeriesRef.current.setData(converted);
+
+    const dataChanged = prevOhlcDataLength.current !== ohlcData.length;
+
+    if (dataChanged || mode === 'historical') {
+      chartRef.current?.timeScale().fitContent();
+      prevOhlcDataLength.current = ohlcData.length;
+    }
+  }, [ohlcData, period, liveOhlcv, mode]);
 
 
   return (
@@ -114,6 +175,22 @@ const CandlestickChart = ({
             </button>
           ))}
         </div>
+
+        {liveInterval && (
+          <div className="button-group">
+            <span className="text-sm mx-2 font-medium text-purple-100/50">Update Frequency:</span>
+            {LIVE_INTERVAL_BUTTONS.map(({ value, label }) => (
+              <button
+                key={value}
+                className={liveInterval === value ? 'config-button-active' : 'config-button'}
+                onClick={() => setLiveInterval && setLiveInterval(value)}
+                disabled={isPending}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div

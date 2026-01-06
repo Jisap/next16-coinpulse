@@ -15,7 +15,6 @@ const CoinOverview = async () => {
         vs_currency: 'usd',
         days: 1,
         //interval: 'hourly',
-        precision: 'full',
       })
     ])
 
