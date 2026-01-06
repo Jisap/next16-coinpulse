@@ -91,9 +91,11 @@ export const getChartConfig = (
   },
 });
 
-export const PERIOD_CONFIG: Record<
-  Period,
-  { days: number | string; interval?: 'hourly' | 'daily' }
+export const PERIOD_CONFIG: Record<Period, // daily, weekly, monthly, 3months, 6months, yearly, max
+  {
+    days: number | string;                 // number for days, string for max
+    interval?: 'hourly' | 'daily'          // hourly or daily
+  }
 > = {
   daily: { days: 1, interval: 'hourly' },
   weekly: { days: 7, interval: 'hourly' },
