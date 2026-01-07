@@ -12,12 +12,12 @@ const DataTable = <T,>({
   columns,
   data,
   rowKey,
-  tableClassName,
-  headerClassName,
-  headerRowClassName,
-  headerCellClassName,
-  bodyRowClassName,
-  bodyCellClassName,
+  tableClassName,      // Clases para la tabla
+  headerClassName,     // Clases para la cabecera
+  headerRowClassName,  // Clases para las filas de la cabecera
+  headerCellClassName, // Clases para las celdas de la cabecera
+  bodyRowClassName,    // Clases para las filas del cuerpo
+  bodyCellClassName,   // Clases para las celdas del cuerpo
 }: DataTableProps<T>) => {
   return (
     <Table className={cn('custom-scrollbar', tableClassName)}>

@@ -81,6 +81,8 @@ export function timeAgo(date: string | number | Date): string {
   return past.toISOString().split('T')[0];
 }
 
+
+// Muestra siempre el principio y el final, y un pequeño grupo de páginas alrededor de la actual
 export const ELLIPSIS = 'ellipsis' as const;
 export const buildPageNumbers = (
   currentPage: number,
@@ -90,30 +92,40 @@ export const buildPageNumbers = (
 
   const pages: (number | typeof ELLIPSIS)[] = [];
 
+  // 1. Caso simple: Si hay 5 páginas o menos, muéstralas todas.
   if (totalPages <= MAX_VISIBLE_PAGES) {
     for (let i = 1; i <= totalPages; i += 1) {
       pages.push(i);
     }
-    return pages;
+    return pages; // -> [1, 2, 3, 4, 5]
   }
 
+
+  // 2. Caso complejo: Hay más de 5 páginas.
+
+  // Siempre se añade la primera página.
   pages.push(1);
 
+  // Calcula el rango de páginas a mostrar alrededor de la actual.
   const start = Math.max(2, currentPage - 1);
   const end = Math.min(totalPages - 1, currentPage + 1);
 
+  // Si hay un hueco entre la página 1 y el inicio del rango, añade "..."
   if (start > 2) {
     pages.push(ELLIPSIS);
   }
 
+  // Añade los números del rango (ej: la página anterior, la actual y la siguiente).
   for (let i = start; i <= end; i += 1) {
     pages.push(i);
   }
 
+  // Si hay un hueco entre el final del rango y la última página, añade "..."
   if (end < totalPages - 1) {
     pages.push(ELLIPSIS);
   }
 
+  // Siempre se añade la última página.
   pages.push(totalPages);
 
   return pages;

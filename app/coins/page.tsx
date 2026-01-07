@@ -1,17 +1,23 @@
+import CoinsPagination from "@/components/CoinsPagination";
 import DataTable from "@/components/DataTable";
 import { fetcher } from "@/lib/coingecko.action";
 import { cn, formatCurrency, formatPercentage } from "@/lib/utils";
-import { Link } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 
-const Page = async () => {
+const Page = async ({ searchParams }: NextPageProps) => {
+
+  const { page } = await searchParams;
+
+  const currentPage = Number(page) || 1;
+  const perPage = 10;
 
   const coinsData = await fetcher<CoinMarketData[]>('/coins/markets', {
     vs_currency: 'usd',
     order: 'market_cap_desc',
-    //per_page: perPage,
-    //page: currentPage,
+    per_page: perPage,
+    page: currentPage,
     sparkline: 'false',
     price_change_percentage: '24h',
   });
@@ -75,6 +81,20 @@ const Page = async () => {
     },
   ];
 
+  // Verifica si hay más páginas. Si la api te devuelve una cantidad de coinsData igual a perPage,
+  //  significa que hay más páginas. Si devuelve menos de currentPage significa que no hay más páginas.
+  const hasMorePages = coinsData.length === perPage;
+
+  // Calcula un límite de páginas "falso" o estimado que crece dinámicamente 
+  // a medida que el usuario avanza.
+  // Ejemplo si estás en la página 101:
+  // 101 / 100 = 1.01
+  // Math.ceil(1.01) = 2(Redondea hacia arriba)
+  // 2 * 100 = 200
+  // 200 + 100 = 300
+  const estimatedTotalPages = currentPage >= 100 ? Math.ceil(currentPage / 100) * 100 + 100 : 100; // Estima el número total de páginas
+
+
 
   return (
     <main id="coins-page">
@@ -88,6 +108,11 @@ const Page = async () => {
           rowKey={(coin) => coin.id}
         />
 
+        <CoinsPagination
+          currentPage={currentPage}
+          totalPages={estimatedTotalPages}
+          hasMorePages={hasMorePages}
+        />
 
       </div>
     </main>
