@@ -260,6 +260,20 @@ interface UseCoinGeckoWebSocketReturn {
   isConnected: boolean;
 }
 
+interface UseCoinGeckoPollingProps {
+  coinId: string;
+  poolId: string;
+  liveInterval: '1s' | '1m';
+}
+
+interface UseCoinGeckoPollingReturn {
+  price: ExtendedPriceData | null;
+  trades: Trade[];
+  ohlcv: OHLCData | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
 interface DataTableColumn<T> {
   header: React.ReactNode;
   cell: (row: T, index: number) => React.ReactNode;

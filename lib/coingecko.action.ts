@@ -97,8 +97,78 @@ export async function getPools(
   try {
     const poolData = await fetcher<{ data: PoolData[] }>('/onchain/search/pools', { query: id }); // Búsqueda general por ID si faltan datos de red/contrato
 
-    return poolData.data?.[0] ?? fallback;                                                        // Retorna el primer pool de la búsqueda general o el fallback
+    return poolData.data?.[0] ?? fallback;
   } catch {
-    return fallback;                                                                              // Retorna el fallback si falla la búsqueda general
+    return fallback;
+  }
+}
+
+/**
+ * Obtiene datos en tiempo real de una moneda específica.
+ */
+export async function getLiveCoinData(coinId: string) {
+  try {
+    const data = await fetcher<CoinDetailsData>(`/coins/${coinId}`, {
+      localization: false,
+      tickers: false,
+      market_data: true,
+      community_data: false,
+      developer_data: false,
+      sparkline: false,
+    }, 0); // Revalidate 0 for live data
+
+    return {
+      usd: data.market_data.current_price.usd,
+      change24h: data.market_data.price_change_percentage_24h_in_currency.usd,
+      timestamp: Date.now(),
+    };
+  } catch (error) {
+    console.error('Error fetching live coin data:', error);
+    return null;
+  }
+}
+
+/**
+ * Obtiene los trades más recientes de un pool específico en GeckoTerminal.
+ */
+export async function getLiveTrades(poolId: string) {
+  try {
+    const [network, address] = poolId.split('_');
+    if (!network || !address) return [];
+
+    const response = await fetcher<{ data: any[] }>(
+      `/onchain/networks/${network}/pools/${address}/trades`,
+      {},
+      0
+    );
+
+    return response.data.map((trade: any) => ({
+      price: parseFloat(trade.attributes.price_in_usd),
+      timestamp: new Date(trade.attributes.block_timestamp).getTime(),
+      type: trade.attributes.kind === 'buy' ? 'b' : 's',
+      amount: parseFloat(trade.attributes.from_token_amount),
+      value: parseFloat(trade.attributes.volume_in_usd),
+    }));
+  } catch (error) {
+    console.error('Error fetching live trades:', error);
+    return [];
+  }
+}
+
+/**
+ * Obtiene los datos OHLC más recientes de un pool.
+ */
+export async function getLiveOHLC(coinId: string) {
+  try {
+    const data = await fetcher<OHLCData[]>(`/coins/${coinId}/ohlc`, {
+      vs_currency: 'usd',
+      days: 1,
+      precision: 'full',
+    }, 0);
+
+    return data[data.length - 1] ?? null;
+  } catch (error) {
+    console.error('Error fetching live OHLC:', error);
+    return null;
   }
 }

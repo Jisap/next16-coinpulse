@@ -75,7 +75,7 @@ const Page = async ({ params }: NextPageProps) => {
 
   return (
     <main id="coin-details-page">
-      {/* <section className="primary">
+      <section className="primary">
         <LiveDataWrapper
           coinId={id}
           poolId={pool.id}
@@ -113,7 +113,7 @@ const Page = async ({ params }: NextPageProps) => {
             ))}
           </ul>
         </div>
-      </section> */}
+      </section>
     </main>
   );
 };
