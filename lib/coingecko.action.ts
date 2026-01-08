@@ -172,3 +172,30 @@ export async function getLiveOHLC(coinId: string) {
     return null;
   }
 }
+
+/**
+ * Busca monedas, exchanges y más en CoinGecko.
+ */
+export async function searchCoins(query: string): Promise<SearchCoin[]> {
+  if (!query) return [];
+  try {
+    const data = await fetcher<{ coins: SearchCoin[] }>('/search', { query });
+    return data.coins;
+  } catch (error) {
+    console.error('Error searching coins:', error);
+    return [];
+  }
+}
+
+/**
+ * Obtiene las monedas en tendencia de CoinGecko.
+ */
+export async function getTrendingCoins(): Promise<TrendingCoin[]> {
+  try {
+    const data = await fetcher<{ coins: TrendingCoin[] }>('/search/trending');
+    return data.coins;
+  } catch (error) {
+    console.error('Error fetching trending coins:', error);
+    return [];
+  }
+}
